@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grocery Shopping List</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"], select {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            min-width: 200px;
+        }
+
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        .category-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .category-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .category-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .item-count {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+        }
+
+        .delete-category-btn {
+            background: #ff4757;
+            padding: 6px 12px;
+            font-size: 0.8em;
+        }
+
+        .delete-category-btn:hover {
+            background: #ee5a6f;
+        }
+
+        .items-list {
+            list-style: none;
+        }
+
+        .item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: white;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .item.checked {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .item-text {
+            flex: 1;
+            font-size: 1em;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            padding: 6px 12px;
+            font-size: 0.85em;
+        }
+
+        .delete-btn:hover {
+            background: #ee5a6f;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+
+        .category-input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f0f4ff;
+            border-radius: 10px;
+        }
+
+        .clear-completed {
+            background: #ffa502;
+            margin-top: 10px;
+        }
+
+        .clear-completed:hover {
+            background: #ff8c00;
+        }
+
+        .category-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 0.9em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .category-chip-delete {
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.8em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .category-chip-delete:hover {
+            background: #ee5a6f;
+        }
+
+        .categories-display {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+
+        .categories-display h3 {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛒 Our Grocery List</h1>
+            <p class="subtitle">Shopping together, one item at a time</p>
+        </header>
+
+        <div class="content">
+            <!-- Add Category Section -->
+            <div class="category-input-section">
+                <input type="text" id="categoryInput" placeholder="New category name...">
+                <button onclick="addCategory()">Add Category</button>
+            </div>
+
+            <!-- Display All Categories -->
+            <div class="categories-display" id="categoriesDisplay"></div>
+
+            <!-- Add Item Section -->
+            <div class="input-section">
+                <input type="text" id="itemInput" placeholder="Add grocery item...">
+                <select id="categorySelect">
+                    <option value="">Select category</option>
+                </select>
+                <button onclick="addItem()">Add Item</button>
+            </div>
+
+            <button class="clear-completed" onclick="clearCompleted()">Clear Completed Items</button>
+
+            <!-- Items Display -->
+            <div id="itemsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // Data structure
+        let groceryData = {
+            categories: ['Produce', 'Dairy', 'Meat', 'Pantry', 'Snacks', 'Beverages'],
+            items: []
+        };
+
+        // Load data from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('groceryList');
+            if (saved) {
+                groceryData = JSON.parse(saved);
+            }
+            updateCategorySelect();
+            renderCategories();
+            renderItems();
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('groceryList', JSON.stringify(groceryData));
+        }
+
+        // Add new category
+        function addCategory() {
+            const input = document.getElementById('categoryInput');
+            const category = input.value.trim();
+            
+            if (category && !groceryData.categories.includes(category)) {
+                groceryData.categories.push(category);
+                updateCategorySelect();
+                renderCategories();
+                saveData();
+                input.value = '';
+            }
+        }
+
+        // Delete category
+        function deleteCategory(category) {
+            // Check if category has items
+            const hasItems = groceryData.items.some(item => item.category === category);
+            
+            if (hasItems) {
+                const confirmDelete = confirm(`"${category}" has items in it. Delete anyway? Items will be moved to "Uncategorized".`);
+                if (!confirmDelete) return;
+                
+                // Move items to Uncategorized
+                groceryData.items.forEach(item => {
+                    if (item.category === category) {
+                        item.category = 'Uncategorized';
+                    }
+                });
+            }
+            
+            // Remove category
+            groceryData.categories = groceryData.categories.filter(cat => cat !== category);
+            
+            updateCategorySelect();
+            renderCategories();
+            renderItems();
+            saveData();
+        }
+
+        // Render categories as chips
+        function renderCategories() {
+            const container = document.getElementById('categoriesDisplay');
+            
+            if (groceryData.categories.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            container.style.display = 'block';
+            
+            let html = '<h3>Your Categories</h3>';
+            groceryData.categories.forEach(category => {
+                html += `
+                    <div class="category-chip">
+                        <span>${category}</span>
+                        <button class="category-chip-delete" onclick="deleteCategory('${category}')" title="Delete category">×</button>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Update category dropdown
+        function updateCategorySelect() {
+            const select = document.getElementById('categorySelect');
+            select.innerHTML = '<option value="">Select category</option>';
+            
+            groceryData.categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                select.appendChild(option);
+            });
+        }
+
+        // Add new item
+        function addItem() {
+            const itemInput = document.getElementById('itemInput');
+            const categorySelect = document.getElementById('categorySelect');
+            
+            const itemName = itemInput.value.trim();
+            const category = categorySelect.value || 'Uncategorized';
+            
+            if (itemName) {
+                groceryData.items.push({
+                    id: Date.now(),
+                    name: itemName,
+                    category: category,
+                    checked: false
+                });
+                
+                saveData();
+                renderItems();
+                itemInput.value = '';
+            }
+        }
+
+        // Toggle item checked status
+        function toggleItem(id) {
+            const item = groceryData.items.find(item => item.id === id);
+            if (item) {
+                item.checked = !item.checked;
+                saveData();
+                renderItems();
+            }
+        }
+
+        // Delete item
+        function deleteItem(id) {
+            groceryData.items = groceryData.items.filter(item => item.id !== id);
+            saveData();
+            renderItems();
+        }
+
+        // Clear all completed items
+        function clearCompleted() {
+            groceryData.items = groceryData.items.filter(item => !item.checked);
+            saveData();
+            renderItems();
+        }
+
+        // Render all items grouped by category
+        function renderItems() {
+            const container = document.getElementById('itemsContainer');
+            
+            if (groceryData.items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg fill="#999" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                        <p>Your grocery list is empty.<br>Add some items to get started!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Group items by category
+            const itemsByCategory = {};
+            groceryData.items.forEach(item => {
+                if (!itemsByCategory[item.category]) {
+                    itemsByCategory[item.category] = [];
+                }
+                itemsByCategory[item.category].push(item);
+            });
+
+            // Render grouped items
+            let html = '';
+            Object.keys(itemsByCategory).sort().forEach(category => {
+                const items = itemsByCategory[category];
+                const uncheckedCount = items.filter(item => !item.checked).length;
+                
+                html += `
+                    <div class="category-section">
+                        <div class="category-header">
+                            <span class="category-name">${category}</span>
+                            <div class="category-actions">
+                                <span class="item-count">${uncheckedCount} items</span>
+                            </div>
+                        </div>
+                        <ul class="items-list">
+                `;
+                
+                items.forEach(item => {
+                    html += `
+                        <li class="item ${item.checked ? 'checked' : ''}">
+                            <input type="checkbox" 
+                                   ${item.checked ? 'checked' : ''} 
+                                   onchange="toggleItem(${item.id})">
+                            <span class="item-text">${item.name}</span>
+                            <button class="delete-btn" onclick="deleteItem(${item.id})">Delete</button>
+                        </li>
+                    `;
+                });
+                
+                html += `
+                        </ul>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Allow Enter key to add items
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('itemInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addItem();
+            });
+            
+            document.getElementById('categoryInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addCategory();
+            });
+            
+            loadData();
+        });
+    </script>
+</body>
+</html>
