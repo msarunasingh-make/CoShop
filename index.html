@@ -262,6 +262,106 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 30px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #f5f5f5;
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: transparent;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: white;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .history-item-text {
+            flex: 1;
+            font-size: 1em;
+            color: #333;
+        }
+
+        .history-item-date {
+            font-size: 0.85em;
+            color: #999;
+        }
+
+        .history-item-category {
+            font-size: 0.85em;
+            color: #667eea;
+            background: #f0f4ff;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .restore-btn {
+            background: #667eea;
+            padding: 6px 12px;
+            font-size: 0.85em;
+        }
+
+        .restore-btn:hover {
+            background: #5568d3;
+        }
+
+        .clear-history-btn {
+            background: #ff4757;
+            margin-top: 10px;
+        }
+
+        .clear-history-btn:hover {
+            background: #ee5a6f;
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 60px 40px;
+            color: #999;
+        }
+
+        .empty-history svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
     </style>
 </head>
 <body>
@@ -272,19 +372,34 @@
         </header>
 
         <div class="content">
-            <!-- Add Category Section -->
-            <div class="category-input-section">
-                <input type="text" id="categoryInput" placeholder="New category name...">
-                <button onclick="addCategory()">Add Category</button>
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('shopping')">🛒 Shopping</button>
+                <button class="tab" onclick="switchTab('history')">📋 History</button>
             </div>
 
-            <!-- Display All Categories -->
-            <div class="categories-display" id="categoriesDisplay"></div>
+            <!-- Shopping Tab -->
+            <div id="shoppingTab" class="tab-content active">
+                <!-- Add Category Section -->
+                <div class="category-input-section">
+                    <input type="text" id="categoryInput" placeholder="New category name...">
+                    <button onclick="addCategory()">Add Category</button>
+                </div>
 
-            <button class="clear-completed" onclick="clearCompleted()">Clear Completed Items</button>
+                <!-- Display All Categories -->
+                <div class="categories-display" id="categoriesDisplay"></div>
 
-            <!-- Items Display -->
-            <div id="itemsContainer"></div>
+                <button class="clear-completed" onclick="clearCompleted()">Clear Completed Items</button>
+
+                <!-- Items Display -->
+                <div id="itemsContainer"></div>
+            </div>
+
+            <!-- History Tab -->
+            <div id="historyTab" class="tab-content">
+                <button class="clear-history-btn" onclick="clearHistory()">Clear All History</button>
+                <div id="historyContainer"></div>
+            </div>
         </div>
     </div>
 
@@ -292,7 +407,8 @@
         // Data structure
         let groceryData = {
             categories: ['Indian Grocery', 'Costco', 'Kid\'s Birthday', 'Weekend Get Together'],
-            items: []
+            items: [],
+            history: []  // Will store completed items with timestamp
         };
 
         // Load data from localStorage
@@ -301,8 +417,13 @@
             if (saved) {
                 groceryData = JSON.parse(saved);
             }
+            // Initialize history array if it doesn't exist (for existing users)
+            if (!groceryData.history) {
+                groceryData.history = [];
+            }
             renderCategories();
             renderItems();
+            renderHistory();
         }
 
         // Save data to localStorage
@@ -412,11 +533,26 @@
             renderItems();
         }
 
-        // Clear all completed items
+        // Clear all completed items - move them to history
         function clearCompleted() {
+            const completedItems = groceryData.items.filter(item => item.checked);
+            
+            // Move completed items to history with timestamp
+            completedItems.forEach(item => {
+                groceryData.history.push({
+                    id: Date.now() + Math.random(), // Unique ID
+                    name: item.name,
+                    category: item.category,
+                    completedDate: new Date().toISOString()
+                });
+            });
+            
+            // Remove completed items from shopping list
             groceryData.items = groceryData.items.filter(item => !item.checked);
+            
             saveData();
             renderItems();
+            renderHistory();
         }
 
         // Render all items grouped by category
@@ -490,6 +626,145 @@
             });
             
             container.innerHTML = html;
+        }
+
+        // Switch between tabs
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            if (tabName === 'shopping') {
+                document.getElementById('shoppingTab').classList.add('active');
+                document.querySelectorAll('.tab')[0].classList.add('active');
+            } else if (tabName === 'history') {
+                document.getElementById('historyTab').classList.add('active');
+                document.querySelectorAll('.tab')[1].classList.add('active');
+            }
+        }
+
+        // Render history tab
+        function renderHistory() {
+            const container = document.getElementById('historyContainer');
+            
+            if (!groceryData.history || groceryData.history.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-history">
+                        <svg fill="#999" viewBox="0 0 24 24">
+                            <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+                        </svg>
+                        <p>No purchase history yet!</p>
+                        <p style="font-size: 0.9em; margin-top: 10px;">Items you mark as complete will appear here.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort history by date (newest first)
+            const sortedHistory = [...groceryData.history].sort((a, b) => 
+                new Date(b.completedDate) - new Date(a.completedDate)
+            );
+            
+            // Group by category
+            const historyByCategory = {};
+            sortedHistory.forEach(item => {
+                if (!historyByCategory[item.category]) {
+                    historyByCategory[item.category] = [];
+                }
+                historyByCategory[item.category].push(item);
+            });
+            
+            let html = '<div style="margin-bottom: 20px;">';
+            
+            // Render each category
+            Object.keys(historyByCategory).forEach(category => {
+                const items = historyByCategory[category];
+                
+                html += `
+                    <div class="category-section">
+                        <div class="category-header">
+                            <span class="category-name">${category}</span>
+                            <div class="category-actions">
+                                <span class="item-count">${items.length} items</span>
+                            </div>
+                        </div>
+                        <div style="padding: 10px;">
+                `;
+                
+                items.forEach(item => {
+                    const date = new Date(item.completedDate);
+                    const formattedDate = date.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                    
+                    html += `
+                        <div class="history-item">
+                            <span class="history-item-text">${item.name}</span>
+                            <span class="history-item-date">${formattedDate}</span>
+                            <button class="restore-btn" onclick="restoreItem(${item.id})">Add Back</button>
+                            <button class="delete-btn" onclick="deleteHistoryItem(${item.id})">Delete</button>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Restore item from history back to shopping list
+        function restoreItem(historyId) {
+            const historyItem = groceryData.history.find(item => item.id === historyId);
+            
+            if (historyItem) {
+                // Add back to shopping list
+                groceryData.items.push({
+                    id: Date.now(),
+                    name: historyItem.name,
+                    category: historyItem.category,
+                    checked: false
+                });
+                
+                // Remove from history
+                groceryData.history = groceryData.history.filter(item => item.id !== historyId);
+                
+                saveData();
+                renderItems();
+                renderHistory();
+                
+                // Switch to shopping tab to show the restored item
+                switchTab('shopping');
+            }
+        }
+
+        // Delete item from history permanently
+        function deleteHistoryItem(historyId) {
+            groceryData.history = groceryData.history.filter(item => item.id !== historyId);
+            saveData();
+            renderHistory();
+        }
+
+        // Clear all history
+        function clearHistory() {
+            if (confirm('Are you sure you want to clear all purchase history? This cannot be undone.')) {
+                groceryData.history = [];
+                saveData();
+                renderHistory();
+            }
         }
 
         // Allow Enter key to add categories
