@@ -262,79 +262,6 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-
-        .quick-add-section {
-            margin-bottom: 25px;
-            padding: 20px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
-        }
-
-        .quick-add-section h3 {
-            color: white;
-            font-size: 1.1em;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .quick-add-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 10px;
-        }
-
-        .quick-add-item {
-            background: white;
-            padding: 12px 16px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.95em;
-            border: 2px solid transparent;
-        }
-
-        .quick-add-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border-color: #667eea;
-        }
-
-        .quick-add-item:active {
-            transform: translateY(0);
-        }
-
-        .quick-add-icon {
-            font-size: 1.2em;
-        }
-
-        .quick-add-count {
-            margin-left: auto;
-            background: #e0e0e0;
-            color: #666;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.75em;
-            font-weight: 600;
-        }
-
-        .manage-favorites {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 8px 16px;
-            font-size: 0.85em;
-            margin-top: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .manage-favorites:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
     </style>
 </head>
 <body>
@@ -354,13 +281,6 @@
             <!-- Display All Categories -->
             <div class="categories-display" id="categoriesDisplay"></div>
 
-            <!-- Quick Add Favorites -->
-            <div class="quick-add-section" id="quickAddSection" style="display: none;">
-                <h3>⚡ Quick Add Favorites</h3>
-                <div class="quick-add-grid" id="quickAddGrid"></div>
-                <button class="manage-favorites" onclick="manageQuickAdd()">Manage Favorites</button>
-            </div>
-
             <button class="clear-completed" onclick="clearCompleted()">Clear Completed Items</button>
 
             <!-- Items Display -->
@@ -372,20 +292,7 @@
         // Data structure
         let groceryData = {
             categories: ['Indian Grocery', 'Costco', 'Kid\'s Birthday', 'Weekend Get Together'],
-            items: [],
-            frequentItems: {
-                // Track how many times each item has been added
-                // Format: { "Milk": { count: 5, category: "Dairy" }, ... }
-            },
-            quickAddFavorites: [
-                // Default favorites
-                { name: 'Milk', category: 'Costco', emoji: '🥛' },
-                { name: 'Eggs', category: 'Costco', emoji: '🥚' },
-                { name: 'Bread', category: 'Costco', emoji: '🍞' },
-                { name: 'Rice', category: 'Indian Grocery', emoji: '🍚' },
-                { name: 'Chicken', category: 'Costco', emoji: '🍗' },
-                { name: 'Tomatoes', category: 'Indian Grocery', emoji: '🍅' }
-            ]
+            items: []
         };
 
         // Load data from localStorage
@@ -395,7 +302,6 @@
                 groceryData = JSON.parse(saved);
             }
             renderCategories();
-            renderQuickAdd();
             renderItems();
         }
 
@@ -456,10 +362,11 @@
             
             let html = '<h3>Your Categories</h3>';
             groceryData.categories.forEach(category => {
+                const escapedCategory = category.replace(/'/g, "\\'");
                 html += `
                     <div class="category-chip">
                         <span>${category}</span>
-                        <button class="category-chip-delete" onclick="deleteCategory('${category}')" title="Delete category">×</button>
+                        <button class="category-chip-delete" onclick="deleteCategory('${escapedCategory}')" title="Delete category">×</button>
                     </div>
                 `;
             });
@@ -482,29 +389,9 @@
                     checked: false
                 });
                 
-                // Track frequency
-                trackFrequentItem(itemName, category);
-                
                 saveData();
                 renderItems();
-                renderQuickAdd();
                 itemInput.value = '';
-            }
-        }
-
-        // Track how often items are added
-        function trackFrequentItem(itemName, category) {
-            if (!groceryData.frequentItems) {
-                groceryData.frequentItems = {};
-            }
-            
-            if (groceryData.frequentItems[itemName]) {
-                groceryData.frequentItems[itemName].count++;
-            } else {
-                groceryData.frequentItems[itemName] = {
-                    count: 1,
-                    category: category
-                };
             }
         }
 
@@ -561,6 +448,7 @@
                 const items = itemsByCategory[category] || [];
                 const uncheckedCount = items.filter(item => !item.checked).length;
                 const inputId = `itemInput_${category.replace(/\s+/g, '_')}`;
+                const escapedCategory = category.replace(/'/g, "\\'");
                 
                 html += `
                     <div class="category-section">
@@ -576,8 +464,8 @@
                             <input type="text" 
                                    id="${inputId}" 
                                    placeholder="Add item to ${category}..."
-                                   onkeypress="if(event.key === 'Enter') addItemToCategory('${category}')">
-                            <button onclick="addItemToCategory('${category}')">Add</button>
+                                   onkeypress="if(event.key === 'Enter') addItemToCategory('${escapedCategory}')">
+                            <button onclick="addItemToCategory('${escapedCategory}')">Add</button>
                         </div>
                         
                         <ul class="items-list">
@@ -602,82 +490,6 @@
             });
             
             container.innerHTML = html;
-        }
-
-        // Render Quick Add favorites section
-        function renderQuickAdd() {
-            const section = document.getElementById('quickAddSection');
-            const grid = document.getElementById('quickAddGrid');
-            
-            if (!groceryData.quickAddFavorites || groceryData.quickAddFavorites.length === 0) {
-                section.style.display = 'none';
-                return;
-            }
-            
-            section.style.display = 'block';
-            
-            let html = '';
-            groceryData.quickAddFavorites.forEach((favorite, index) => {
-                // Check how many times this item has been used
-                const useCount = groceryData.frequentItems && groceryData.frequentItems[favorite.name] 
-                    ? groceryData.frequentItems[favorite.name].count 
-                    : 0;
-                
-                html += `
-                    <div class="quick-add-item" onclick="quickAddItem('${favorite.name}', '${favorite.category}')">
-                        <span class="quick-add-icon">${favorite.emoji}</span>
-                        <span>${favorite.name}</span>
-                        ${useCount > 0 ? `<span class="quick-add-count">${useCount}</span>` : ''}
-                    </div>
-                `;
-            });
-            
-            grid.innerHTML = html;
-        }
-
-        // Quick add an item from favorites
-        function quickAddItem(itemName, category) {
-            // Check if item already exists and is not checked
-            const existingItem = groceryData.items.find(item => 
-                item.name === itemName && 
-                item.category === category && 
-                !item.checked
-            );
-            
-            if (existingItem) {
-                // Item already in list, just highlight it briefly
-                alert(`"${itemName}" is already on your list!`);
-                return;
-            }
-            
-            // Add the item
-            groceryData.items.push({
-                id: Date.now(),
-                name: itemName,
-                category: category,
-                checked: false
-            });
-            
-            // Track frequency
-            trackFrequentItem(itemName, category);
-            
-            saveData();
-            renderItems();
-            renderQuickAdd();
-            
-            // Visual feedback
-            const grid = document.getElementById('quickAddGrid');
-            grid.style.opacity = '0.7';
-            setTimeout(() => {
-                grid.style.opacity = '1';
-            }, 200);
-        }
-
-        // Manage Quick Add favorites
-        function manageQuickAdd() {
-            const message = `Current favorites:\n\n${groceryData.quickAddFavorites.map((f, i) => `${i + 1}. ${f.emoji} ${f.name} (${f.category})`).join('\n')}\n\nTo customize your Quick Add favorites, you can edit them in the browser console or we can add a full management UI in a future update!`;
-            
-            alert(message);
         }
 
         // Allow Enter key to add categories
